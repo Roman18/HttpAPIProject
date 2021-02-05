@@ -2,32 +2,34 @@ package com.company.Menu.AuthorisationAction;
 
 import com.company.Exceptions.ProblemWithConnectException;
 import com.company.Exceptions.StatusException;
-import com.company.ResponseAndRequest.SignUp.SignUpResponse;
-import com.company.Services.AuthorisationService;
+import com.company.Services.UserService;
+import com.company.dto.User;
 import lombok.AllArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.Scanner;
 
 @AllArgsConstructor
 public class SignUpAuthAction implements AuthorisationAction{
     private Scanner scanner;
-    private AuthorisationService authorisationService;
+    private UserService userService;
     @Override
-    public String doAction() {
+    public void doAction() {
         System.out.println("Login:");
         String login=scanner.nextLine();
         System.out.println("Password:");
-        String passwd=scanner.nextLine();
+        String password=scanner.nextLine();
         System.out.println("Date born:");
         String dateBorn=validDateBorn();
-        SignUpResponse sur=authorisationService.singUp(login,passwd,dateBorn);
+        User user=new User();
+        user.setLogin(login);
+        user.setPassword(password);
+        user.setDateBorn(LocalDate.parse(dateBorn));
         try {
-            validSignUp(sur);
-            hasError(sur);
+            userService.register(user);
         } catch (StatusException | ProblemWithConnectException e) {
             System.out.println(e.getMessage());
         }
-        return null;
     }
 
 
@@ -35,17 +37,7 @@ public class SignUpAuthAction implements AuthorisationAction{
     public String getName() {
         return "Sign Up";
     }
-    private void validSignUp(SignUpResponse sur) {
-        if (sur == null) {
-            throw new ProblemWithConnectException("Problem with connect");
-        }
-    }
 
-    private void hasError(SignUpResponse sur) {
-        if (sur.getStatus().equals("error")) {
-            throw new StatusException(sur.getError());
-        }
-    }
     private String validDateBorn(){
         while (true){
             String dateBorn=scanner.nextLine();

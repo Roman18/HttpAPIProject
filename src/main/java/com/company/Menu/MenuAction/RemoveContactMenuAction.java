@@ -1,41 +1,39 @@
 package com.company.Menu.MenuAction;
 
-import com.company.Exceptions.ProblemWithConnectException;
-import com.company.Exceptions.StatusException;
 import com.company.Services.ContactService;
-
 import lombok.AllArgsConstructor;
-
 
 import java.util.Scanner;
 
+
 @AllArgsConstructor
-public class SearchByContactMenuAction implements MenuAction {
+public class RemoveContactMenuAction implements MenuAction {
     private Scanner scanner;
-    private ContactService[]contactService;
+    private ContactService[] contactServices;
+
     @Override
     public void doAction() {
         while (true) {
-
-            System.out.println("Please, enter contact");
-            String value=scanner.next();
-            System.out.println("");
+            System.out.println("Enter id of contact");
+            Integer id = scanner.nextInt();
             try {
-                for (int i = 0; i<contactService.length ; i++) {
-                    System.out.println(contactService[i].findByValue(value));
+
+                for (int i = 0; i < contactServices.length; i++) {
+                    contactServices[i].remove(id);
                 }
-            }catch (ProblemWithConnectException| StatusException e){
+            }catch (UnsupportedOperationException e){
                 System.out.println(e.getMessage());
             }
             if (!closeAfter()) {
                 break;
             }
+
         }
     }
 
     @Override
     public String getName() {
-        return "Search by contact";
+        return "Remove contact";
     }
 
     @Override
@@ -48,5 +46,4 @@ public class SearchByContactMenuAction implements MenuAction {
             return false;
         }
     }
-
 }

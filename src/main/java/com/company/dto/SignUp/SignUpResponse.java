@@ -1,4 +1,4 @@
-package com.company.ResponseAndRequest.SignUp;
+package com.company.dto.SignUp;
 
 import lombok.Data;
 

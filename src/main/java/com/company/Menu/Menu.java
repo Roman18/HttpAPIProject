@@ -2,6 +2,8 @@ package com.company.Menu;
 
 import com.company.Menu.AuthorisationAction.AuthorisationAction;
 import com.company.Menu.MenuAction.MenuAction;
+import com.company.Services.UserService;
+
 
 import java.util.Arrays;
 import java.util.Scanner;
@@ -10,9 +12,11 @@ public class Menu {
     private MenuAction[] actions;
     private Scanner sc;
     private AuthorisationAction[] authorisationActions;
-    private String token;
+    private UserService userService;
 
-    public Menu(Scanner sc) {
+
+    public Menu(Scanner sc,UserService userService) {
+        this.userService=userService;
         this.actions = new MenuAction[0];
         this.authorisationActions = new AuthorisationAction[0];
         this.sc = sc;
@@ -32,12 +36,12 @@ public class Menu {
 
 
     public void runAuth() {
-        while (hasNotToken()) {
+        while (!userService.isAuth()) {
             showAuthMenu();
             int choose = sc.nextInt();
             sc.nextLine();
             if (validAuthIndex(choose)) {
-                token = authorisationActions[choose - 1].doAction();
+             authorisationActions[choose - 1].doAction();
             } else {
                 System.out.println("Invalid index...");
             }
@@ -56,7 +60,7 @@ public class Menu {
                 break;
             }
             if (validIndex(choose)) {
-                actions[choose - 1].doAction(token);
+                actions[choose - 1].doAction();
             } else {
                 System.out.println("Invalid index...");
             }
@@ -87,7 +91,5 @@ public class Menu {
         return !(index <= 0 || index > authorisationActions.length);
     }
 
-    private boolean hasNotToken() {
-        return token == null;
-    }
+
 }

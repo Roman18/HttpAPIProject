@@ -1,4 +1,4 @@
-package com.company.ResponseAndRequest.LogIn;
+package com.company.dto.LogIn;
 
 
 import lombok.AllArgsConstructor;

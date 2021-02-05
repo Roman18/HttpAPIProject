@@ -1,17 +1,19 @@
-package com.company.ResponseAndRequest.GetAll;
+package com.company.dto.Add;
+
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+
+
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserResponse {
+public class AddRequest {
+    private String type;
     private String value;
     private String name;
-    private String type;
-    private int id;
-
 
 }

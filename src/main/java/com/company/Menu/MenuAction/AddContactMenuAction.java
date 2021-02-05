@@ -2,9 +2,8 @@ package com.company.Menu.MenuAction;
 
 import com.company.Exceptions.ProblemWithConnectException;
 import com.company.Exceptions.StatusException;
-import com.company.ResponseAndRequest.Add.AddResponse;
-import com.company.Services.UserService;
-import com.company.ResponseAndRequest.Add.AddRequest;
+import com.company.Services.Contact;
+import com.company.Services.ContactService;
 import lombok.AllArgsConstructor;
 
 import java.util.Scanner;
@@ -12,22 +11,27 @@ import java.util.Scanner;
 @AllArgsConstructor
 public class AddContactMenuAction implements MenuAction {
     private Scanner scanner;
-    private UserService userService;
+    private ContactService []contactServices;
 
     @Override
-    public void doAction(String token) {
+    public void doAction() {
         while (true) {
             System.out.println("Name:");
             String name = scanner.next();
             System.out.println("Please, enter phone number or email:");
             String info = validNumber();
-            AddRequest user = info.matches("\\+380\\d{9}") ?
-                    new AddRequest("phone", info, name) :
-                    new AddRequest("email", info, name);
-            AddResponse add = userService.add(user, token);
+            Contact contact=new Contact();
+            contact.setName(name);
+            contact.setContact(info);
+            contact.setType(
+                    info.matches("\\+380\\d{9}")?
+                            Contact.TypeContact.valueOf("phone".toUpperCase()):
+                            Contact.TypeContact.valueOf("email".toUpperCase())
+            );
             try {
-                validAdd(add);
-                hasError(add);
+                for (int i = 0; i <contactServices.length ; i++) {
+                    contactServices[i].add(contact);
+                }
             } catch (ProblemWithConnectException | StatusException e) {
                 System.out.println(e.getMessage());
             }
@@ -42,7 +46,7 @@ public class AddContactMenuAction implements MenuAction {
             String contact = scanner.next();
             if (contact.matches("\\+380\\d{9}")) {
                 return contact;
-            } else if (contact.matches("([\\w]+)(@)((gmail\\.com)|(mail\\.ru)|(ukr\\.net))")) {
+            } else if (contact.matches("([\\w]+)(@)(.+)")) {
                 return contact;
             } else {
                 System.out.println("Invalid contact\nTry again...");
@@ -50,17 +54,7 @@ public class AddContactMenuAction implements MenuAction {
         }
     }
 
-    private void validAdd(AddResponse add) {
-        if (add == null) {
-            throw new ProblemWithConnectException("Problem with connect");
-        }
-    }
 
-    private void hasError(AddResponse add) {
-        if (add.getStatus().equals("error")) {
-            throw new StatusException(add.getError());
-        }
-    }
 
     @Override
     public String getName() {

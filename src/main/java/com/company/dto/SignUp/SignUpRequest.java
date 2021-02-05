@@ -1,4 +1,4 @@
-package com.company.ResponseAndRequest.SignUp;
+package com.company.dto.SignUp;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;

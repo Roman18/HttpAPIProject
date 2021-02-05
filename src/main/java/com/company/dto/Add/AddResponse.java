@@ -1,4 +1,4 @@
-package com.company.ResponseAndRequest.Add;
+package com.company.dto.Add;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

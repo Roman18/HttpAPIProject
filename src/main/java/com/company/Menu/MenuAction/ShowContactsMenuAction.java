@@ -3,8 +3,8 @@ package com.company.Menu.MenuAction;
 
 import com.company.Exceptions.ProblemWithConnectException;
 import com.company.Exceptions.StatusException;
-import com.company.ResponseAndRequest.GetAll.GetAllResponse;
-import com.company.Services.UserService;
+import com.company.Services.ContactService;
+import com.company.dto.GetAll.GetContactsResponse;
 import lombok.AllArgsConstructor;
 
 import java.util.Scanner;
@@ -12,16 +12,16 @@ import java.util.Scanner;
 @AllArgsConstructor
 public class ShowContactsMenuAction implements MenuAction {
     private Scanner scanner;
-    private UserService userService;
+    private ContactService[]contactService;
 
     @Override
-    public void doAction(String token) {
+    public void doAction() {
         while (true) {
-            GetAllResponse users = userService.getAll(token);
+
             try {
-                validAdd(users);
-                hasError(users);
-                System.out.println(users.getContacts());
+                for (int i = 0; i <contactService.length ; i++) {
+                    System.out.println(contactService[i].getAll());
+                }
             } catch (ProblemWithConnectException | StatusException e) {
                 System.out.println(e.getMessage());
             }
@@ -47,13 +47,13 @@ public class ShowContactsMenuAction implements MenuAction {
         }
     }
 
-    private void validAdd(GetAllResponse users) {
+    private void validAdd(GetContactsResponse users) {
         if (users == null) {
             throw new ProblemWithConnectException("Problem with connect");
         }
     }
 
-    private void hasError(GetAllResponse users) {
+    private void hasError(GetContactsResponse users) {
         if (users.getStatus().equals("error")) {
             throw new StatusException(users.getError());
         }

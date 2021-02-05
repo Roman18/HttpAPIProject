@@ -1,7 +1,7 @@
 package com.company.Menu.AuthorisationAction;
 
 public interface AuthorisationAction {
-    String doAction();
+    void doAction();
     String getName();
 
 }

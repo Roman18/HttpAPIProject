@@ -2,9 +2,7 @@ package com.company.Menu.MenuAction;
 
 import com.company.Exceptions.ProblemWithConnectException;
 import com.company.Exceptions.StatusException;
-import com.company.ResponseAndRequest.SearchByValue.SearchByNameRequest;
-import com.company.ResponseAndRequest.SearchByValue.SearchByValueResponse;
-import com.company.Services.UserService;
+import com.company.Services.ContactService;
 import lombok.AllArgsConstructor;
 
 import java.util.Scanner;
@@ -12,19 +10,17 @@ import java.util.Scanner;
 @AllArgsConstructor
 public class SearchByNameMenuAction implements MenuAction {
     private Scanner scanner;
-    private UserService userService;
+    private ContactService[]contactService;
 
     @Override
-    public void doAction(String token) {
+    public void doAction() {
         while (true) {
-
             System.out.println("Please, enter name");
             String name=scanner.next();
-            SearchByValueResponse search=userService.searchByValue(new SearchByNameRequest(name),token);
             try {
-                validSearch(search);
-                hasError(search);
-                System.out.println(search.getContacts());
+                for (int i = 0; i <contactService.length ; i++) {
+                    System.out.println(contactService[i].findByName(name));
+                }
             }catch (ProblemWithConnectException| StatusException e){
                 System.out.println(e.getMessage());
             }
@@ -50,15 +46,4 @@ public class SearchByNameMenuAction implements MenuAction {
         }
     }
 
-    private void validSearch(SearchByValueResponse search) {
-        if (search == null) {
-            throw new ProblemWithConnectException("Problem with connect");
-        }
-    }
-
-    private void hasError(SearchByValueResponse search) {
-        if (search.getStatus().equals("error")) {
-            throw new StatusException(search.getError());
-        }
-    }
 }

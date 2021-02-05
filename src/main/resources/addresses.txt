@@ -1,0 +1,4 @@
+4[email:lamp|lamp@i.ua]
+5[phone:igor|+380987162531]
+6[email:lamp1|lamp1@gmail.com]
+7[email:lamp3|lamp3@ukr.net]
