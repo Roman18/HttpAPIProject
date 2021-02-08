@@ -35,7 +35,7 @@ public class Menu {
     }
 
 
-    public void runAuth() {
+    private void runAuth() {
         while (!userService.isAuth()) {
             showAuthMenu();
             int choose = sc.nextInt();

@@ -64,7 +64,7 @@ public class ApiContactService implements ContactService {
         try {
             String req = objectMapper.writeValueAsString(searchByNameRequest);
             HttpRequest httpRequest = HttpRequest.newBuilder().
-                    uri(URI.create("https://mag-contacts-api.herokuapp.com/contacts/find"))
+                    uri(URI.create(this.baseUri+"/find"))
                     .POST(HttpRequest.BodyPublishers.ofString(req)).
                             header("Accept", "application/json").
                             header("Authorization", "Bearer " + userService.getToken()).
@@ -99,7 +99,7 @@ public class ApiContactService implements ContactService {
         try {
             String req = objectMapper.writeValueAsString(searchByNameRequest);
             HttpRequest httpRequest = HttpRequest.newBuilder().
-                    uri(URI.create("https://mag-contacts-api.herokuapp.com/contacts/find"))
+                    uri(URI.create(this.baseUri+"find"))
                     .POST(HttpRequest.BodyPublishers.ofString(req)).
                             header("Accept", "application/json").
                             header("Authorization", "Bearer " + userService.getToken()).
