@@ -18,6 +18,8 @@ public class PropertiesLoad {
     private String uri;
     private UserService userService;
     private ContactService[] contactServices;
+    private ObjectMapper objectMapper = new ObjectMapper();
+    private HttpClient httpClient = HttpClient.newBuilder().build();
 
     public PropertiesLoad() {
         this.value = (String) sprop.get("contactbook.profile");
@@ -25,36 +27,13 @@ public class PropertiesLoad {
 
     public void loadProp() throws PropertiesException {
         checkProp();
-        HttpClient httpClient = HttpClient.newBuilder().build();
-        ObjectMapper objectMapper = new ObjectMapper();
-        this.mod = sprop.getProperty("app.service.workmode");
-        switch (this.mod) {
-            case "api":
-                this.uri = sprop.getProperty("api.base-uri");
-                validProp(this.uri);
-                this.userService = new ApiUsersService(
-                        this.uri,
-                        objectMapper,
-                        httpClient);
-                this.contactServices = new ContactService[]{new ApiContactService(userService,
-                        objectMapper, httpClient, this.uri)};
-                break;
-            case "file":
-                this.path = sprop.getProperty("file.path");
-                validProp(this.path);
-                System.out.println(this.path);
-                this.userService = new FictiveUserService();
-                this.contactServices = new ContactService[]{new FileContactService(new ContactSerializer(), this.path)};
-                break;
-            case "memory":
-                this.userService = new FictiveUserService();
-                this.contactServices = new ContactService[]{new InMemoryContactService()};
-                break;
-            default:
-                throw new PropertiesException("unsupported app.service.workmode");
-        }
-
-
+        setAllProp();
+        validProp(this.uri);
+        validProp(this.path);
+        validProp(this.mod);
+        validMod();
+        this.userService = createUserService();
+        this.contactServices = createContactService();
     }
 
 
@@ -63,9 +42,35 @@ public class PropertiesLoad {
         return contactServices;
     }
 
+
     public UserService getUserService() throws PropertiesException {
         validProp(this.userService);
         return userService;
+    }
+
+    private void setAllProp() {
+        this.mod = sprop.getProperty("app.service.workmode");
+        this.uri = sprop.getProperty("api.base-uri");
+        this.path = sprop.getProperty("file.path");
+    }
+
+    private UserService createUserService() {
+        return "api".equals(this.mod) ?
+                new ApiUsersService(
+                        this.uri,
+                        objectMapper,
+                        httpClient) : new FictiveUserService();
+    }
+
+    private ContactService[] createContactService() {
+        if ("api".equals(this.mod)) {
+            return new ContactService[]{new ApiContactService(userService,
+                    objectMapper, httpClient, this.uri)};
+        } else if ("file".equals(this.mod)) {
+            return new ContactService[]{new FileContactService(new ContactSerializer(), this.path)};
+        } else {
+            return new ContactService[]{new InMemoryContactService()};
+        }
     }
 
     private void checkProp() throws PropertiesException {
@@ -81,9 +86,14 @@ public class PropertiesLoad {
                 default:
                     throw new PropertiesException("Problem with launch parameter");
             }
-
         } catch (IOException e) {
             throw new PropertiesException("Problem with launch parameter");
+        }
+    }
+
+    private void validMod() throws PropertiesException {
+        if (!("api".equals(this.mod)) && !("file".equals(this.mod)) && !("memory".equals(this.mod))) {
+            throw new PropertiesException("unsupported app.service.workmode");
         }
     }
 
