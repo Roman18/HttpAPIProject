@@ -5,14 +5,13 @@ import com.company.Serializer.ContactSerializer;
 import com.company.Services.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.net.http.HttpClient;
-import java.util.Properties;
+
 
 public class PropertiesLoad {
-    private String value;
-    private Properties sprop = System.getProperties();
+    private ConfigLoader configLoader = new ConfigLoader();
+    private SysProperties app;
+    private FileProperties fileProp;
     private String mod;
     private String path;
     private String uri;
@@ -21,12 +20,9 @@ public class PropertiesLoad {
     private ObjectMapper objectMapper = new ObjectMapper();
     private HttpClient httpClient = HttpClient.newBuilder().build();
 
-    public PropertiesLoad() {
-        this.value = (String) sprop.get("contactbook.profile");
-    }
 
     public void loadProp() throws PropertiesException {
-        checkProp();
+        preLoadProp();
         setAllProp();
         validProp(this.uri);
         validProp(this.path);
@@ -49,9 +45,9 @@ public class PropertiesLoad {
     }
 
     private void setAllProp() {
-        this.mod = sprop.getProperty("app.service.workmode");
-        this.uri = sprop.getProperty("api.base-uri");
-        this.path = sprop.getProperty("file.path");
+        this.mod = fileProp.getMod();
+        this.uri = fileProp.getUri();
+        this.path = fileProp.getFile();
     }
 
     private UserService createUserService() {
@@ -73,27 +69,21 @@ public class PropertiesLoad {
         }
     }
 
-    private void checkProp() throws PropertiesException {
-        sprop = new Properties();
-        try {
-            switch (this.value) {
-                case "dev":
-                    sprop.load(new FileInputStream("app-dev.properties"));
-                    break;
-                case "prod":
-                    sprop.load(new FileInputStream("app-prod.properties"));
-                    break;
-                default:
-                    throw new PropertiesException("Problem with launch parameter");
-            }
-        } catch (IOException e) {
-            throw new PropertiesException("Problem with launch parameter");
-        }
+    private void preLoadProp() throws PropertiesException {
+        this.app = configLoader.getSystemProp(SysProperties.class);
+        validParam(app.getProperties());
+        this.fileProp = configLoader.getFileProp(FileProperties.class, "app-" + app.getProperties() + ".properties");
     }
 
     private void validMod() throws PropertiesException {
         if (!("api".equals(this.mod)) && !("file".equals(this.mod)) && !("memory".equals(this.mod))) {
             throw new PropertiesException("unsupported app.service.workmode");
+        }
+    }
+
+    private void validParam(String prop) throws PropertiesException {
+        if (!("prod".equals(prop)) && !("dev".equals(prop))) {
+            throw new PropertiesException("unsupported properties " + prop);
         }
     }
 
