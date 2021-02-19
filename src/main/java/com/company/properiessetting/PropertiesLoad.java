@@ -1,11 +1,12 @@
 package com.company.properiessetting;
 
 import com.company.Exceptions.PropertiesException;
-import com.company.Serializer.ContactSerializer;
 import com.company.Services.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.company.factory.Services.ApiServiceFactory;
+import com.company.factory.Services.FileServiceFactory;
+import com.company.factory.Services.InMemoryServiceFactory;
+import com.company.factory.Services.ServiceFactory;
 
-import java.net.http.HttpClient;
 
 
 public class PropertiesLoad {
@@ -17,8 +18,6 @@ public class PropertiesLoad {
     private String uri;
     private UserService userService;
     private ContactService[] contactServices;
-    private ObjectMapper objectMapper = new ObjectMapper();
-    private HttpClient httpClient = HttpClient.newBuilder().build();
 
 
     public void loadProp() throws PropertiesException {
@@ -28,8 +27,7 @@ public class PropertiesLoad {
         validProp(this.path);
         validProp(this.mod);
         validMod();
-        this.userService = createUserService();
-        this.contactServices = createContactService();
+        setServices();
     }
 
 
@@ -50,24 +48,19 @@ public class PropertiesLoad {
         this.path = fileProp.getFile();
     }
 
-    private UserService createUserService() {
-        return "api".equals(this.mod) ?
-                new ApiUsersService(
-                        this.uri,
-                        objectMapper,
-                        httpClient) : new FictiveUserService();
+    private void setServices(){  // Новый метод(работает с фабрикой)
+        ServiceFactory serviceFactory;
+        if ("api".equals(this.mod)){
+            serviceFactory = new ApiServiceFactory(this.uri);
+        }else if("file".equals(this.mod)){
+            serviceFactory = new FileServiceFactory(this.path);
+        }else {
+            serviceFactory = new InMemoryServiceFactory();
+        }
+        this.userService = serviceFactory.createUserService();
+        this.contactServices = new ContactService[]{serviceFactory.createContactService(this.userService)};
     }
 
-    private ContactService[] createContactService() {
-        if ("api".equals(this.mod)) {
-            return new ContactService[]{new ApiContactService(userService,
-                    objectMapper, httpClient, this.uri)};
-        } else if ("file".equals(this.mod)) {
-            return new ContactService[]{new FileContactService(new ContactSerializer(), this.path)};
-        } else {
-            return new ContactService[]{new InMemoryContactService()};
-        }
-    }
 
     private void preLoadProp() throws PropertiesException {
         this.app = configLoader.getSystemProp(SysProperties.class);

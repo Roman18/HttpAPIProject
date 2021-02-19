@@ -7,6 +7,8 @@ import com.company.dto.Add.AddResponse;
 import com.company.dto.GetAll.GetContactsResponse;
 import com.company.dto.SearchByValue.SearchByNameRequest;
 import com.company.dto.SearchByValue.SearchByValueRequest;
+import com.company.factory.Requests.ContactServiceHttpRequestFactory;
+import com.company.factory.Requests.HttpRequestFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
@@ -20,12 +22,21 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@AllArgsConstructor
+
 public class ApiContactService implements ContactService {
     private UserService userService;
     private ObjectMapper objectMapper;
     private HttpClient httpClient;
     private String baseUri;
+    private final HttpRequestFactory factory;
+    public ApiContactService(UserService userService, ObjectMapper objectMapper, HttpClient httpClient, String baseUri){
+        this.userService=userService;
+        this.objectMapper=objectMapper;
+        this.httpClient=httpClient;
+        this.baseUri=baseUri;
+        this.factory=new ContactServiceHttpRequestFactory(baseUri,userService);
+    }
+
 
     @Override
     public void add(Contact contact) {
@@ -34,7 +45,7 @@ public class ApiContactService implements ContactService {
         request.setName(contact.getName());
         request.setValue(contact.getContact());
         try {
-            HttpRequest httpRequest = createAuthorizationRequest("/contacts/add", request);
+            HttpRequest httpRequest = factory.createPostRequest("/contacts/add",request);
             HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
             AddResponse addResponse = objectMapper.readValue(response.body(), AddResponse.class);
             if (addResponse == null) {
@@ -62,14 +73,7 @@ public class ApiContactService implements ContactService {
         SearchByNameRequest searchByNameRequest = new SearchByNameRequest();
         searchByNameRequest.setName(name);
         try {
-            String req = objectMapper.writeValueAsString(searchByNameRequest);
-            HttpRequest httpRequest = HttpRequest.newBuilder().
-                    uri(URI.create(this.baseUri+"/find"))
-                    .POST(HttpRequest.BodyPublishers.ofString(req)).
-                            header("Accept", "application/json").
-                            header("Authorization", "Bearer " + userService.getToken()).
-                            header("Content-Type", "application/json").
-                            build();
+            HttpRequest httpRequest = factory.createPostRequest("/find", searchByNameRequest);
             HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
             GetContactsResponse getContactsResponse = objectMapper.readValue(response.body(), GetContactsResponse.class);
             if ("error".equals(getContactsResponse.getStatus())) {
@@ -97,14 +101,7 @@ public class ApiContactService implements ContactService {
         SearchByValueRequest searchByNameRequest = new SearchByValueRequest();
         searchByNameRequest.setValue(value);
         try {
-            String req = objectMapper.writeValueAsString(searchByNameRequest);
-            HttpRequest httpRequest = HttpRequest.newBuilder().
-                    uri(URI.create(this.baseUri+"find"))
-                    .POST(HttpRequest.BodyPublishers.ofString(req)).
-                            header("Accept", "application/json").
-                            header("Authorization", "Bearer " + userService.getToken()).
-                            header("Content-Type", "application/json").
-                            build();
+            HttpRequest httpRequest = factory.createPostRequest("/find", searchByNameRequest);
             HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
             GetContactsResponse getContactsResponse = objectMapper.readValue(response.body(), GetContactsResponse.class);
             if ("error".equals(getContactsResponse.getStatus())) {
@@ -129,13 +126,7 @@ public class ApiContactService implements ContactService {
     @Override
     public List<Contact> getAll() {
         System.out.println("=====Result from api=====");
-        HttpRequest httpRequest = HttpRequest.newBuilder().
-                uri(URI.create(baseUri + "/contacts")).
-                GET()
-                .header("Authorization", "Bearer " + userService.getToken())
-                .headers("Content-type", "application/json")
-                .build();
-
+        HttpRequest httpRequest = factory.createGetRequest("/contacts");
         try {
             HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
             GetContactsResponse getContactsResponse = objectMapper.readValue(response.body(), GetContactsResponse.class);
@@ -158,13 +149,5 @@ public class ApiContactService implements ContactService {
         }
 
         return Collections.emptyList();
-    }
-    private HttpRequest createAuthorizationRequest(String path, AddRequest request) throws JsonProcessingException {
-        return HttpRequest.newBuilder().
-                uri(URI.create(baseUri + path)).
-                POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(request)))
-                .header("Authorization", "Bearer " + userService.getToken())
-                .headers("Content-type", "application/json")
-                .build();
     }
 }

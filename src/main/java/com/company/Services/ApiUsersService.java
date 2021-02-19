@@ -6,6 +6,8 @@ import com.company.dto.LogIn.LoginRequest;
 import com.company.dto.LogIn.LoginResponse;
 import com.company.dto.SignUp.SignUpRequest;
 import com.company.dto.SignUp.SignUpResponse;
+import com.company.factory.Requests.HttpRequestFactory;
+import com.company.factory.Requests.UserServiceHttpRequestFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -19,11 +21,18 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@RequiredArgsConstructor
+
 public class ApiUsersService implements UserService {
     private final String baseUri;
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient;
+    private final HttpRequestFactory factory;
+    public ApiUsersService(String baseUri, ObjectMapper objectMapper, HttpClient httpClient){
+        this.baseUri = baseUri;
+        this.objectMapper=objectMapper;
+        this.httpClient = httpClient;
+       this.factory = new UserServiceHttpRequestFactory(baseUri);
+    }
 
     private String token;
     private LocalDateTime lct;
@@ -49,7 +58,7 @@ public class ApiUsersService implements UserService {
         signUpRequest.setDateBorn(user.getDateBorn().toString());
         try {
 
-            HttpRequest httpRequest = createRequest("/register", signUpRequest);
+            HttpRequest httpRequest = factory.createPostRequest("/register",signUpRequest);
             HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
             SignUpResponse signUpResponse= objectMapper.readValue(response.body(), SignUpResponse.class);
 
@@ -67,11 +76,9 @@ public class ApiUsersService implements UserService {
         loginRequest.setPassword(user.getPassword());
         loginRequest.setLogin(user.getLogin());
         try {
-
-            HttpRequest httpRequest = createRequest("/login", loginRequest);
+            HttpRequest httpRequest = factory.createPostRequest("/login",loginRequest);
             HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
             LoginResponse loginResponse = objectMapper.readValue(response.body(), LoginResponse.class);
-
             if ("ok".equals(loginResponse.getStatus())){
                 token=loginResponse.getToken();
                 lct=LocalDateTime.now();
@@ -90,11 +97,5 @@ public class ApiUsersService implements UserService {
     }
 
 
-    private HttpRequest createRequest(String path, Object request) throws JsonProcessingException {
-        return HttpRequest.newBuilder().
-                uri(URI.create(baseUri + path)).
-                POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(request)))
-                .headers("Content-type", "application/json")
-                .build();
-    }
+
 }
