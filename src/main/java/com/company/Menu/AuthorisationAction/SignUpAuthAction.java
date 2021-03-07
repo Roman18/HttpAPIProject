@@ -41,7 +41,7 @@ public class SignUpAuthAction implements AuthorisationAction{
     private String validDateBorn(){
         while (true){
             String dateBorn=scanner.nextLine();
-            if (dateBorn.matches("(\\d){4}-(((0)[1-9])|(1)[0-2])-(([0-2][1-9])|([3][0-1]))")){
+            if (dateBorn.matches("(\\d){4}-(([0][1-9])|([1][0-2]))-(([0-2][1-9])|([3][0-1]))")){
                 return dateBorn;
             }
             System.out.println("The date form should be => yyyy-mm-dd\nTry again...");

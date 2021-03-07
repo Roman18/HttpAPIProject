@@ -1,12 +1,9 @@
 package com.company.properiessetting;
 
 import com.company.Exceptions.PropertiesException;
-import com.company.Services.*;
-import com.company.factory.Services.ApiServiceFactory;
-import com.company.factory.Services.FileServiceFactory;
-import com.company.factory.Services.InMemoryServiceFactory;
-import com.company.factory.Services.ServiceFactory;
-
+import com.company.Services.ContactService;
+import com.company.Services.UserService;
+import com.company.factory.Services.*;
 
 
 public class PropertiesLoad {
@@ -16,6 +13,9 @@ public class PropertiesLoad {
     private String mod;
     private String path;
     private String uri;
+    private String dsn;
+    private String user;
+    private String password;
     private UserService userService;
     private ContactService[] contactServices;
 
@@ -23,9 +23,6 @@ public class PropertiesLoad {
     public void loadProp() throws PropertiesException {
         preLoadProp();
         setAllProp();
-        validProp(this.uri);
-        validProp(this.path);
-        validProp(this.mod);
         validMod();
         setServices();
     }
@@ -42,19 +39,28 @@ public class PropertiesLoad {
         return userService;
     }
 
-    private void setAllProp() {
+    private void setAllProp() throws PropertiesException {
         this.mod = fileProp.getMod();
         this.uri = fileProp.getUri();
         this.path = fileProp.getFile();
+        this.dsn = fileProp.getDsn();
+        this.user = fileProp.getUser();
+        this.password = fileProp.getPassword();
+        String[] allProp = {this.mod, this.uri, this.path, this.dsn, this.user, this.password};
+        for (String prop : allProp) {
+            validProp(prop);
+        }
     }
 
-    private void setServices(){  // Новый метод(работает с фабрикой)
+    private void setServices() {  // Новый метод(работает с фабрикой)
         ServiceFactory serviceFactory;
-        if ("api".equals(this.mod)){
+        if ("api".equals(this.mod)) {
             serviceFactory = new ApiServiceFactory(this.uri);
-        }else if("file".equals(this.mod)){
+        } else if ("file".equals(this.mod)) {
             serviceFactory = new FileServiceFactory(this.path);
-        }else {
+        } else if ("db".equals(this.mod)) {
+            serviceFactory = new DBServiceFactory(this.dsn, this.user, this.password);
+        } else {
             serviceFactory = new InMemoryServiceFactory();
         }
         this.userService = serviceFactory.createUserService();
@@ -64,21 +70,23 @@ public class PropertiesLoad {
 
     private void preLoadProp() throws PropertiesException {
         this.app = configLoader.getSystemProp(SysProperties.class);
-        validParam(app.getProperties());
-        this.fileProp = configLoader.getFileProp(FileProperties.class, "app-" + app.getProperties() + ".properties");
+        try {
+            this.fileProp = configLoader.getFileProp(FileProperties.class, "app-" + app.getProperties() + ".properties");
+        } catch (Exception e) {
+            throw new PropertiesException("file not exist");
+        }
+
     }
 
     private void validMod() throws PropertiesException {
-        if (!("api".equals(this.mod)) && !("file".equals(this.mod)) && !("memory".equals(this.mod))) {
+        if (!("api".equals(this.mod)) &&
+                !("file".equals(this.mod)) &&
+                !("memory".equals(this.mod)) &&
+                !("db".equals(this.mod))) {
             throw new PropertiesException("unsupported app.service.workmode");
         }
     }
 
-    private void validParam(String prop) throws PropertiesException {
-        if (!("prod".equals(prop)) && !("dev".equals(prop))) {
-            throw new PropertiesException("unsupported properties " + prop);
-        }
-    }
 
     private void validProp(Object str) throws PropertiesException {
         if (str == null) {

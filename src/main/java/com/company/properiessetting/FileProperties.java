@@ -10,4 +10,10 @@ public class FileProperties {
     private String uri;
     @SystemProp("file.path")
     private String file;
+    @SystemProp("db.dsn")
+    private String dsn;
+    @SystemProp("db.user")
+    private String user;
+    @SystemProp("db.password")
+    private String password;
 }
